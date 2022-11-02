@@ -1,0 +1,6 @@
+name: hand-calibration
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - opencv=4.6.0

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+python3 src/camera/distance_estimation.py
