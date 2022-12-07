@@ -5,7 +5,9 @@ import camera_calibration as camera_calibration
 
 def grab_image(camera_idx):
     camera = cv2.VideoCapture(camera_idx)
-    ok, image = camera.read()
+    for _ in range(30):
+        ok, image = camera.read()
+
     if not ok:
         print('Could not grab image')
     camera.release()

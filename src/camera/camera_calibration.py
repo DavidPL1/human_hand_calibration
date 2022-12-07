@@ -5,7 +5,7 @@ import os
 
 ### CONSTANTS ###
 CHECKERBOARD_SIZE = (7, 9)
-PATH_TO_VIDEO = '/Users/tmarkmann/Downloads/checkerboard.mov'
+PATH_TO_VIDEO = 1
 
 
 ### PUBLIC FUNCTIONS ###
@@ -56,6 +56,8 @@ def __getCheckerboardPoints(image, checkerboard_size, display=False):
             image = cv2.drawChessboardCorners(image, (board_columns,board_rows), corners_refined,ret)
             cv2.imshow('img', image)
             cv2.waitKey(0)
+    else:
+        print('Could not detect checkerboard corners')
 
     cv2.destroyAllWindows()
     image_size = image.shape[::-1]
@@ -95,8 +97,11 @@ def __videoRead(path):
 
 ### MAIN FUNCTION ###
 if __name__ == "__main__":
-    image = load_distorted_image(PATH_TO_VIDEO, show=False)
+    print('Load Image')
+    image = load_distorted_image(PATH_TO_VIDEO, show=True)
+    print('Determine Checkerboard Points')
     wp, ip, size = __getCheckerboardPoints(image, CHECKERBOARD_SIZE, display=True)
+    print('Calibrate')
     im, cmatrix, distcoeff, rvecs, tvecs = __calibrate(image, wp, ip, size)
     __save_camera_params(cmatrix, distcoeff, ip)
     print('Calibration saved')
