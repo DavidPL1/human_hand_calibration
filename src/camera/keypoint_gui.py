@@ -3,6 +3,8 @@ import yaml
 import numpy as np
 import distance_estimation
 import os
+import argparse
+from grab_image import grab_image
 
 class Rect:
     x = None
@@ -28,8 +30,8 @@ class Circ:
         return (x - self.x)**2 + (y - self.y)**2 < self.radius**2
 
 class Prog:
-    def __init__(self) -> None:
-        self.source = cv2.imread('src/image_grab.png')
+    def __init__(self, image) -> None:
+        self.source = image
         self.image  = self.source.copy()
 
         self.keypoint_names = ["DEXMO_REF", "Th_MCP", "Ind_MCP", "Mid_MCP", "Ring_MCP", "Little_MCP", 
@@ -252,4 +254,16 @@ class Prog:
             print(f"Saved calib under path: {self.save_path}")
 
 if __name__ == '__main__':
-    Prog()
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
+    parser.add_argument('--test', action='store_true', help='launch with a prerecorded test image')
+
+    args = parser.parse_args()
+    print(args)
+    if args.test:
+        image = cv2.imread('src/image_grab.png')
+    else:
+        image = grab_image(args.device)
+
+    Prog(image)
