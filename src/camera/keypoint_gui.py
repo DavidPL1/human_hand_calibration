@@ -75,9 +75,11 @@ class Prog:
                 self.clearCanvasNDraw()
             if key == ord(" ") and self.keypoint_idx > 19:
                 self.save_config()
+            if key == ord("q"):
+                print("Pressed Q to quit")
+                self.done = True
 
         print("Done!")
-        cv2.waitKey(0)
 
     def cb_func(self, event, x, y, flags, bla):
         
