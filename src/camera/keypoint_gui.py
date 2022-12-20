@@ -30,7 +30,7 @@ class Prog:
         self.source = cv2.imread('src/image_grab.png')
         self.image  = self.source.copy()
 
-        self.keypoint_names = ["RUJ", "Th_MCP", "Ind_MCP", "Mid_MCP", "Ring_MCP", "Little_MCP", 
+        self.keypoint_names = ["DEXMO_REF", "Th_MCP", "Ind_MCP", "Mid_MCP", "Ring_MCP", "Little_MCP", 
                                "Th_IP", "Th_TIP",
                                "Ind_PIP", "Ind_DIP", "Ind_TIP",
                                "Mid_PIP", "Mid_DIP", "Mid_TIP",
