@@ -1,6 +1,8 @@
 import cv2
+import yaml
 import numpy as np
 import distance_estimation
+import os
 
 class Rect:
     x = None
@@ -47,6 +49,8 @@ class Prog:
         cv2.setMouseCallback(self.wName, self.cb_func)
 
         self.show_distances = False
+        self.saved = False
+        self.save_path = ''
 
         self.done = False
         while not self.done:
@@ -68,7 +72,7 @@ class Prog:
                 self.show_distances = not self.show_distances
                 self.clearCanvasNDraw()
             if key == ord(" ") and self.keypoint_idx > 19:
-                print("Saving config NYI!")
+                self.save_config()
 
         print("Done!")
         cv2.waitKey(0)
@@ -170,9 +174,75 @@ class Prog:
         cv2.imshow(self.wName, self.image)
 
 
-def run():
-    pass
+    def save_config(self):
+
+        thumb  = dict()
+        index  = dict()
+        middle = dict()
+        ring   = dict()
+        little = dict()
+
+        mcp = self.keypoints["Th_MCP"]
+        ip = self.keypoints["Th_IP"]
+        tip = self.keypoints["Th_TIP"]
+
+        thumb["proximal"] = distance_estimation.estimate_distance((ip.x, ip.y), (mcp.x, mcp.y))
+        thumb["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (ip.x, ip.y))
+
+        mcp = self.keypoints["Ind_MCP"]
+        pip = self.keypoints["Ind_PIP"]
+        dip = self.keypoints["Ind_DIP"]
+        tip = self.keypoints["Ind_TIP"]
+
+        index["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y))
+        index["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y))
+        index["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y))
+
+        middle_mcp = mcp = self.keypoints["Mid_MCP"]
+        pip = self.keypoints["Mid_PIP"]
+        dip = self.keypoints["Mid_DIP"]
+        tip = self.keypoints["Mid_TIP"]
+
+        middle["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y))
+        middle["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y))
+        middle["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y))
+
+        mcp = self.keypoints["Ring_MCP"]
+        pip = self.keypoints["Ring_PIP"]
+        dip = self.keypoints["Ring_DIP"]
+        tip = self.keypoints["Ring_TIP"]
+
+        ring["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y))
+        ring["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y))
+        ring["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y))
+
+        mcp = self.keypoints["Little_MCP"]
+        pip = self.keypoints["Little_PIP"]
+        dip = self.keypoints["Little_DIP"]
+        tip = self.keypoints["Little_TIP"]
+
+        little["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y))
+        little["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y))
+        little["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y))
+
+        ruj = self.keypoints["DEXMO_REF"]
+
+        data = dict(
+            link_lengths = dict(
+                thumb=thumb,
+                index=index,
+                middle=middle,
+                ring=ring,
+                little=little,
+                dexmo_ref=distance_estimation.estimate_distance((middle_mcp.x, middle_mcp.y), (ruj.x, ruj.y))
+            )
+        )
+
+        with open('handcalib.yaml', 'w') as f:
+            yaml.dump(data, f, default_flow_style=False)
+            self.save_path = os.path.abspath(f.name)
+            self.saved = True
+            print(f"Saved calib under path: {self.save_path}")
 
 if __name__ == '__main__':
-#    run()
     Prog()
