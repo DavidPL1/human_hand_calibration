@@ -99,6 +99,7 @@ class Prog:
         if event == cv2.EVENT_MOUSEMOVE:
             if self.dragging is not None:
                 self.mouseMove(x, y)
+                self.saved = False
 
         self.clearCanvasNDraw()
 
@@ -170,6 +171,12 @@ class Prog:
 
         if self.keypoint_idx > 19:
             cv2.putText(self.image, "Once you are happy with the keypoints, press space to generate a calibration file!", (x0, y0), font, 0.7, (0, 0, 255), 2)
+
+        if self.save_path != '':
+            if self.saved:
+                cv2.putText(self.image, f"Saved Config to: {self.save_path}", (50, self.image.shape[0] - 100), font, 0.7, (0, 0, 255), 2)
+            else:
+                cv2.putText(self.image, f"Unsaved changes!", (50, self.image.shape[0] - 100), font, 0.7, (0, 0, 255), 2)
 
         cv2.imshow(self.wName, self.image)
 
