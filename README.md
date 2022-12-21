@@ -2,7 +2,7 @@
 
 ## Camera Calibration 
 1. Find out the camera index (usually 0 or 1) and adapt `PATH_TO_VIDEO` in `src/camera/camera_calibration`
-2. Execute `scripts/calibrate.sh` to generate a calibration file `calibration.npy` later used for the distance estimation
+2. Execute `scripts/calibrate_camera.sh` to generate a calibration file `calibration.npy` later used for the distance estimation
 
 ## Distance Estimation
 

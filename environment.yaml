@@ -4,3 +4,4 @@ channels:
   - defaults
 dependencies:
   - opencv=4.6.0
+  - pyyaml
