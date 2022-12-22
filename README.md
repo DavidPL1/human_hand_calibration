@@ -2,14 +2,15 @@
 
 ## Steps
 1. Set up camera rig and place chessboard
-2. Calibrate the camera using `scripts/calibrate_camera.sh --device <camera_index> --width <width> --height <height> --corner_length <corner_length>`
+2. Install conda environment
+3. Calibrate the camera using `scripts/calibrate_camera.sh --device <camera_index> --width <width> --height <height> --corner_length <corner_length>`
    * camera_index: webcam has index 0, additional cameras have indices 1, 2, ...
    * width: width of the calibration chessboard
    * height: height of the calibration chessboard
    * corner_length: distance between squares of chessboard pattern
-3. Remove chessboard
+4. Remove chessboard
 5. Place hand on top of camera rig
-4. Execute the hand calibration using `scripts/execute.sh --device <camera_index>` 
+6. Execute the hand calibration using `scripts/execute.sh --device <camera_index>` 
    * Follow instructions
    * Presse Q to quit
 
