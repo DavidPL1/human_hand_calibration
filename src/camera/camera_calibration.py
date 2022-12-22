@@ -1,11 +1,7 @@
 import cv2
 import numpy as np
 import os
-
-
-### CONSTANTS ###
-CHECKERBOARD_SIZE = (7, 9)
-PATH_TO_VIDEO = 1
+import argparse
 
 
 ### PUBLIC FUNCTIONS ###
@@ -17,7 +13,9 @@ def load_camera_params():
         camera_matrix = np.load(f)
         distortion_coeff = np.load(f)
         corners = np.load(f)
-    return camera_matrix, distortion_coeff, corners
+        board_size = np.load(f)
+        corner_size = np.load(f)
+    return camera_matrix, distortion_coeff, corners, (board_size[0], board_size[1]), corner_size
 
 # Shows distorted images at a given path
 def load_distorted_image(path, show=False):
@@ -77,13 +75,16 @@ def __calibrate(image, world_points, image_points, image_size):
     image_undistorted = cv2.undistort(image, camera_matrix, distortion_coeff, None, camera_matrix_opt)
     return image_undistorted, camera_matrix, distortion_coeff, rotation_vecs, translation_vecs
 
-def __save_camera_params(camera_matrix, distortion_coeff, corners):
+def __save_camera_params(camera_matrix, distortion_coeff, corners, board_size, corner_size):
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, '../calibration.npy')
     with open(filename, 'wb') as f:
         np.save(f, camera_matrix)
         np.save(f, distortion_coeff)
         np.save(f, corners)
+        w, h = board_size
+        np.save(f, np.array([w, h]))
+        np.save(f, np.array([corner_size]))
 
 def __videoRead(path):
     video_file = cv2.VideoCapture(path)
@@ -97,11 +98,18 @@ def __videoRead(path):
 
 ### MAIN FUNCTION ###
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
+    parser.add_argument('-w', '--width', type=int, help="Width of chessboard (number of squares) (defaults to 7)", default=7)
+    parser.add_argument('-h', '--height', type=int, help="Height of chessboard (number of squares) (defaults to 9)", default=9)
+    parser.add_argument('-l', '--corner_length', type=float, help="Height of chessboard (number of squares) (defaults to 9)", default=0.22)
+    args = parser.parse_args()
+
     print('Load Image')
-    image = load_distorted_image(PATH_TO_VIDEO, show=True)
+    image = load_distorted_image(args.device, show=True)
     print('Determine Checkerboard Points')
-    wp, ip, size = __getCheckerboardPoints(image, CHECKERBOARD_SIZE, display=True)
+    wp, ip, size = __getCheckerboardPoints(image, (args.width, args.height), display=True)
     print('Calibrate')
     im, cmatrix, distcoeff, rvecs, tvecs = __calibrate(image, wp, ip, size)
-    __save_camera_params(cmatrix, distcoeff, ip)
+    __save_camera_params(cmatrix, distcoeff, ip, (args.width, args.height), args.corner_length)
     print('Calibration saved')

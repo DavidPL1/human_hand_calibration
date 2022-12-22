@@ -1,10 +1,20 @@
 # Hand Calibration
 
-## Camera Calibration 
-1. Find out the camera index (usually 0 or 1) and adapt `PATH_TO_VIDEO` in `src/camera/camera_calibration`
-2. Execute `scripts/calibrate_camera.sh` to generate a calibration file `calibration.npy` later used for the distance estimation
+## Steps
+1. Set up camera rig and place chessboard
+2. Calibrate the camera using `scripts/calibrate_camera.sh --device <camera_index> --width <width> --height <height> --corner_length <corner_length>`
+   * camera_index: webcam has index 0, additional cameras have indices 1, 2, ...
+   * width: width of the calibration chessboard
+   * height: height of the calibration chessboard
+   * corner_length: distance between squares of chessboard pattern
+3. Remove chessboard
+5. Place hand on top of camera rig
+4. Execute the hand calibration using `scripts/execute.sh --device <camera_index>` 
+   * Follow instructions
+   * Presse Q to quit
 
-## Distance Estimation
+## Dev instructions
+### Distance Estimation
 
 ``` python
 from src.camera.distance_estimation import estimate_distance 
@@ -14,10 +24,9 @@ point_b = ...
 distance = estimate_distance(point_a, point_b)
 ```
 
-## Grab Image
+### Grab Image
 ``` python
 from src.camera.grab_image import grab_image 
-from src.camera.distance_estimation import PATH_TO_VIDEO 
 
-image = grab_image(PATH_TO_VIDEO)
+image = grab_image(camera_index)
 ```

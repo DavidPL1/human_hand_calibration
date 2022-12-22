@@ -1,6 +1,7 @@
 import cv2
 import os
 import camera_calibration as camera_calibration
+import argparse
 
 
 def grab_image(camera_idx):
@@ -16,8 +17,12 @@ def grab_image(camera_idx):
 
 ### MAIN FUNCTION ###
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
+    args = parser.parse_args()
+
     # read image
-    image = grab_image(camera_calibration.PATH_TO_VIDEO)
+    image = grab_image(args.device)
 
     # show image
     cv2.imshow('Image', image)

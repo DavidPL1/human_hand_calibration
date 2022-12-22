@@ -264,7 +264,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
     if args.test:
-        image = cv2.imread('src/image_grab.png')
+        image = cv2.imread('images/hand.png')
     else:
         image = grab_image(args.device)
 

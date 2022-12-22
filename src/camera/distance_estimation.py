@@ -3,20 +3,17 @@ import cv2
 import math
 import camera_calibration as camera_calibration
 from functools import partial
-
-
-### CONSTANTS ###
-CORNER_DISTANCE = 0.022 #[m]
+import argparse
 
 
 ### PUBLIC FUNCTIONS ###
 
 def estimate_distance(a, b, simple=False):
-    camera_matrix, dist_coeff, corners = camera_calibration.load_camera_params()
+    camera_matrix, dist_coeff, corners, board_size, corner_size = camera_calibration.load_camera_params()
     if simple:
-        return __estimateDistanceSimple([a, b], corners)
+        return __estimateDistanceSimple([a, b], corners, board_size, corner_size)
     else:
-        return __estimateDistance([a, b], camera_matrix, dist_coeff, corners)
+        return __estimateDistance([a, b], camera_matrix, dist_coeff, corners, board_size, corner_size)
 
 ### PRIVATE FUNCTIONS ###
 
@@ -50,8 +47,8 @@ def __pointToWorld(image_point, camera_matrix, rotation_matrix, translation_vect
     return worldPoint
 
 # Estimates the distance between two point. Assumes that the camera is parallel to the checkerboard
-def __estimateDistanceSimple(points, corners):
-    columns, rows = camera_calibration.CHECKERBOARD_SIZE
+def __estimateDistanceSimple(points, corners, board_size, corner_size):
+    columns, rows = board_size
     corners = corners[0]
 
     # Calculate mean distance between corner points
@@ -62,16 +59,16 @@ def __estimateDistanceSimple(points, corners):
     mean = total / (rows*(columns-1))
     # Calculate estimated distance
     measurePointDistance = __euclideanDistance(points[0], points[1])
-    return CORNER_DISTANCE * measurePointDistance / mean
+    return corner_size * measurePointDistance / mean
 
 # Estimates the distance between two point. There is no assumption regarding the camera position
-def __estimateDistance(points, camera_matrix, distortion_coeff, corners):
+def __estimateDistance(points, camera_matrix, distortion_coeff, corners, board_size, corner_size):
     corners = corners[0]
     # Get known world points of the checkerboard corners
-    boardColumns, boardRows = camera_calibration.CHECKERBOARD_SIZE
+    boardColumns, boardRows = board_size
     board_points_3D = np.zeros((boardRows*boardColumns,3), np.float32)
     board_points_3D[:,:2] = np.mgrid[0:boardColumns,0:boardRows].T.reshape(-1,2)
-    board_points_3D = board_points_3D * CORNER_DISTANCE
+    board_points_3D = board_points_3D * corner_size
 
     # Calculate rotation and translation vector
     _, rVec, tVec = cv2.solvePnP(board_points_3D, corners, camera_matrix, distortion_coeff)
@@ -92,8 +89,13 @@ def __euclideanDistance(p1, p2):
 ### MAIN FUNCTION
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
+    args = parser.parse_args()
+
     # Choose points for distance estimation -> mouse event
-    image = camera_calibration.load_distorted_image(camera_calibration.PATH_TO_VIDEO, show=False)
+    image = camera_calibration.load_distorted_image(args.device, show=False)
+
     points = []
     cv2.imshow("Distance Estimation", image)
     cv2.setMouseCallback("Distance Estimation", partial(__getPointCoordEvent, image, points))
