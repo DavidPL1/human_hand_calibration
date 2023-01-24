@@ -99,10 +99,10 @@ def __videoRead(path):
 ### MAIN FUNCTION ###
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
-    parser.add_argument('-w', '--width', type=int, help="Width of chessboard (number of squares) (defaults to 7)", default=7)
-    parser.add_argument('-h', '--height', type=int, help="Height of chessboard (number of squares) (defaults to 9)", default=9)
-    parser.add_argument('-l', '--corner_length', type=float, help="Height of chessboard (number of squares) (defaults to 9)", default=0.22)
+    parser.add_argument('-D', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
+    parser.add_argument('-W', '--width', type=int, help="Width of chessboard (number of squares) (defaults to 7)", default=7)
+    parser.add_argument('-H', '--height', type=int, help="Height of chessboard (number of squares) (defaults to 9)", default=9)
+    parser.add_argument('-L', '--corner_length', type=float, help="Height of chessboard (number of squares) (defaults to 9)", default=0.22)
     args = parser.parse_args()
 
     print('Load Image')
