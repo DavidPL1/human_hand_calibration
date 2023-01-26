@@ -3,6 +3,8 @@ import numpy as np
 import os
 import argparse
 
+from grab_image import grab_image
+
 
 ### PUBLIC FUNCTIONS ###
 
@@ -19,7 +21,7 @@ def load_camera_params():
 
 # Shows distorted images at a given path
 def load_distorted_image(path, show=False):
-    image = __videoRead(path)
+    image = grab_image(path, cvt_color=True)
     if show:
         cv2.imshow('Distorted Image', image)
         cv2.waitKey(0)
@@ -85,15 +87,6 @@ def __save_camera_params(camera_matrix, distortion_coeff, corners, board_size, c
         w, h = board_size
         np.save(f, np.array([w, h]))
         np.save(f, np.array([corner_size]))
-
-def __videoRead(path):
-    video_file = cv2.VideoCapture(path)
-    ok, frame = video_file.read()
-    if not ok:
-        print('Could not grab image')
-        exit(1)
-    video_file.release()
-    return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
 
 ### MAIN FUNCTION ###
