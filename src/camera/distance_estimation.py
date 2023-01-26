@@ -4,6 +4,7 @@ import math
 import camera_calibration as camera_calibration
 from functools import partial
 import argparse
+import numpy as np
 
 
 ### PUBLIC FUNCTIONS ###
@@ -14,6 +15,20 @@ def estimate_distance(a, b, simple=False):
         return __estimateDistanceSimple([a, b], corners, board_size, corner_size)
     else:
         return __estimateDistance([a, b], camera_matrix, dist_coeff, corners, board_size, corner_size)
+
+def get_axis_offset(mcp, dip, point):
+    p1 = np.array(mcp)
+    p2 = np.array(dip)
+    p3 = np.array(point)
+
+    r = __project_point_on_line(p1, p2, p3)
+
+    x = np.linalg.norm(np.cross(p2-p1, p1-p3))/np.linalg.norm(p2-p1)
+    y = __euclideanDistance(p1, r)
+
+    assert(x == __euclideanDistance(r,p3))
+
+    return x, y
 
 ### PRIVATE FUNCTIONS ###
 
@@ -84,6 +99,10 @@ def __estimateDistance(points, camera_matrix, distortion_coeff, corners, board_s
 # Returns the euclidean distance of two points
 def __euclideanDistance(p1, p2):
     return math.sqrt( (p1[0]-p2[0])**2+(p1[1]-p2[1])**2 )
+
+# Projects point p onto line ab
+def __project_point_on_line(a, b, p):
+    return a + np.dot(p-a, b-a) / np.dot(b-a, b-a) * (b-a)
 
 
 ### MAIN FUNCTION
