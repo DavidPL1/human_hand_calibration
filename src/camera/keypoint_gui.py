@@ -5,6 +5,7 @@ import distance_estimation
 import os
 import argparse
 from grab_image import grab_image
+import copy
 
 class Rect:
     x = None
@@ -67,7 +68,7 @@ class Prog:
         with open(os.path.join(os.path.dirname(__file__), '..', 'default_calib.yaml'), 'r') as f:
             self.calib_values = yaml.safe_load(f)
 
-        self.defalt_calib = self.calib_values.copy()
+        self.defalt_calib = copy.deepcopy(self.calib_values)
 
         self.dragging = None
 
