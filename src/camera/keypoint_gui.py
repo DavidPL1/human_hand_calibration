@@ -14,7 +14,7 @@ class Rect:
     h = None
 
 def get_palm_dist_calib_name(shorthand : str):
-    if shorthand == 'Th_MCP':
+    if shorthand == 'Th_TM':
         return 'thumb'
     if shorthand == 'Ind_MCP':
         return 'index'
@@ -51,8 +51,8 @@ class Prog:
 
         self.keypoint_names = [
             "palm_ref0",  "palm_ref1",
-            "Th_MCP",     "Ind_MCP",    "Mid_MCP", "Ring_MCP", "Lit_MCP", 
-            "Th_IP",      "Th_TIP",
+            "Th_TM",      "Ind_MCP",    "Mid_MCP", "Ring_MCP", "Lit_MCP", 
+            "Th_MCP",     "Th_IP",      "Th_TIP",
             "Ind_PIP",    "Ind_DIP",    "Ind_TIP",
             "Mid_PIP",    "Mid_DIP",    "Mid_TIP",
             "Ring_PIP",   "Ring_DIP",   "Ring_TIP",
@@ -183,8 +183,8 @@ class Prog:
                 cv2.line(self.image, (keypoint_list[0][1].x, keypoint_list[0][1].y), (circle.x, circle.y), (0, 255, 0), 2)
 
             # Connect PIP to MCP, DIP to PIP, and TIP to DIP
-            if len(MCPs) == 5 and 'MCP' not in name:
-                if name == 'Th_IP':
+            if len(MCPs) == 5 and ('MCP' not in name or name == 'Th_MCP'):
+                if name == 'Th_MCP':
                     ref = MCPs[0]
                 elif name == 'Ind_PIP':
                     ref = MCPs[1]
@@ -214,9 +214,9 @@ class Prog:
 
             
             # Connect MCPs and Palm refs to polygon
-            if name == 'Th_MCP':
+            if name == 'Th_TM':
                 cv2.line(self.image, (keypoint_list[1][1].x, keypoint_list[1][1].y), (circle.x, circle.y), (0, 255, 0), 2)
-            if 'MCP' in name:
+            if name != 'Th_MCP' and ('MCP' in name or name == 'Th_TM'):
                 if self.show_distances and self.palm is not None:
                     cv2.line(self.image, (self.palm[0], self.palm[1]), (circle.x, circle.y), (57, 127, 253), 2)
                     text = f"{distance_estimation.estimate_distance(self.palm, (circle.x, circle.y))*100:2.2f}cm"
@@ -367,11 +367,12 @@ class Prog:
 
         scales = {}
 
+        tm  = self.keypoints["Th_TM"]
         mcp = self.keypoints["Th_MCP"]
-        ip = self.keypoints["Th_IP"]
+        ip  = self.keypoints["Th_IP"]
         tip = self.keypoints["Th_TIP"]
 
-        thumb["proximal"] = 0.05415 # For now hardcoded. Is palm link+offset to Th_MCP
+        thumb["proximal"] = distance_estimation.estimate_distance((tm.x, tm.y), self.palm)
         thumb["middle"]   = distance_estimation.estimate_distance((ip.x, ip.y), (mcp.x, mcp.y))
         thumb["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (ip.x, ip.y))
 
