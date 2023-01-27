@@ -238,7 +238,7 @@ class Prog:
                     ).astype(np.int16)
                     x_off = distance_estimation.estimate_distance(self.palm, proj)
                     z_off = distance_estimation.estimate_distance((circle.x, circle.y), proj)
-                    if proj[1] > self.palm[1]:
+                    if proj[1] < self.palm[1]:
                         x_off *= -1
 
                     c_name = get_palm_dist_calib_name(name)
