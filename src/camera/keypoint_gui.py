@@ -236,8 +236,10 @@ class Prog:
                         np.array((keypoint_list[1][1].x, keypoint_list[1][1].y)),
                         np.array((circle.x, circle.y))
                     ).astype(np.int16)
-                    x_off = distance_estimation.estimate_distance(self.palm, proj)
-                    z_off = distance_estimation.estimate_distance((circle.x, circle.y), proj)
+                    z_off = distance_estimation.estimate_distance(self.palm, proj)
+                    x_off = distance_estimation.estimate_distance((circle.x, circle.y), proj)
+                    if circle.y < proj[1]:
+                        x_off *= -1
 
                     c_name = get_palm_dist_calib_name(name)
                     self.calib_values['palm_link_distances'][c_name]['z'] = z_off
