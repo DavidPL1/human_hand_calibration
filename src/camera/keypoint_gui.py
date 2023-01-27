@@ -170,7 +170,13 @@ class Prog:
     def clearCanvasNDraw(self):
         self.image  = self.source.copy()
 
-        font = cv2.FONT_HERSHEY_SIMPLEX
+        font = cv2.FONT_HERSHEY_COMPLEX_SMALL
+        fontsize_keypoints = 0.8
+        fontsize_dists     = 0.5
+        fontsize_inst      = 0.7
+        font_thickness     = 1
+
+        text_above = 1
 
         keypoint_list = list(self.keypoints.items())
         MCPs = []
@@ -201,15 +207,16 @@ class Prog:
 
                 if self.show_distances:
                     text = f"{distance_estimation.estimate_distance((ref.x, ref.y), (circle.x, circle.y))*100:2.2f}cm"
-                    textsize, _ = cv2.getTextSize(text, font, 0.4, 2)
+                    textsize, _ = cv2.getTextSize(text, font, fontsize_dists, font_thickness)
                     cv2.putText(
                         self.image,
                         text,
                         (circle.x - (circle.x - ref.x)//2 - textsize[0]//2, circle.y - (circle.y - ref.y)//2 - textsize[1]//2),
                         font, 
-                        0.4, 
+                        fontsize_dists,
                         (0, 0, 255),
-                        1
+                        font_thickness,
+                        cv2.LINE_AA
                     )
 
             
@@ -220,15 +227,16 @@ class Prog:
                 if self.show_distances and self.palm is not None:
                     cv2.line(self.image, (self.palm[0], self.palm[1]), (circle.x, circle.y), (57, 127, 253), 2)
                     text = f"{distance_estimation.estimate_distance(self.palm, (circle.x, circle.y))*100:2.2f}cm"
-                    textsize, _ = cv2.getTextSize(text, font, 0.4, 2)
+                    textsize, _ = cv2.getTextSize(text, font, fontsize_dists, font_thickness)
                     cv2.putText(
                         self.image,
                         text,
                         (circle.x - (circle.x - self.palm[0])//2 - textsize[0]//2, circle.y - (circle.y - self.palm[1])//2 - textsize[1]//2),
                         font, 
-                        0.4, 
+                        fontsize_dists,
                         (0, 0, 255),
-                        1
+                        font_thickness,
+                        cv2.LINE_AA
                     )
                 
                 if self.palm is not None:
@@ -263,28 +271,30 @@ class Prog:
                 #     cv2.line(self.image, self.palm, proj, (255, 255, 255), 2)
                 #     cv2.circle(self.image, proj, circle.radius//2, (255, 255, 255), 2)
                 #     text = f"{distance_estimation.estimate_distance(self.palm, proj)*100:2.2f}cm"
-                #     textsize, _ = cv2.getTextSize(text, font, 0.4, 2)
+                #     textsize, _ = cv2.getTextSize(text, font, fontsize_dists, font_thickness)
                 #     cv2.putText(
                 #         self.image,
                 #         text,
                 #         (proj[0] - textsize[0], proj[1] - textsize[1]//2),
                 #         font, 
-                #         0.4, 
+                #         fontsize_dists, 
                 #         (255, 255, 255),
-                #         1
+                #         font_thickness,
+                #         cv2.LINE_AA
                 #     )
 
                 #     cv2.line(self.image, (circle.x, circle.y), proj, (255, 255, 255), 2)
                 #     text = f"{distance_estimation.estimate_distance((circle.x, circle.y), proj)*100:2.2f}cm"
-                #     textsize, _ = cv2.getTextSize(text, font, 0.4, 2)
+                #     textsize, _ = cv2.getTextSize(text, font, fontsize_dists, font_thickness)
                 #     cv2.putText(
                 #         self.image,
                 #         text,
                 #         (circle.x - (circle.x - proj[0])//2 - textsize[0]//2, proj[1] - textsize[1]),
                 #         font, 
-                #         0.4, 
+                #         fontsize_dists, 
                 #         (255, 255, 255),
-                #         1
+                #         font_thickness,
+                #         cv2.LINE_AA
                 #     )
 
 
@@ -301,18 +311,22 @@ class Prog:
                 color = (255, 255, 255)
                 cv2.circle(self.image, (circle.x, circle.y), circle.radius, color, 3)
             else:
-                color = (0, 255, 0)
-                cv2.circle(self.image, (circle.x, circle.y), circle.radius, color, 3)
-            textsize, _ = cv2.getTextSize(name, font, 0.5, 2)
+                color = (255, 0, 0)
+                cv2.circle(self.image, (circle.x, circle.y), circle.radius, (0,  255, 0), 3)
+            textsize, _ = cv2.getTextSize(name, font, fontsize_keypoints, font_thickness)
+            if 'MCP' in name or 'PIP' in name:
+                text_above = 1
             cv2.putText(
                 self.image,
                 name,
-                (circle.x - textsize[0]//2, circle.y - textsize[1]//2 - 10),
+                (circle.x - textsize[0]//2, circle.y - text_above * (textsize[1]//2 + 15)),
                 font,
-                0.5,
+                fontsize_keypoints,
                 color,
-                2
+                font_thickness,
+                cv2.LINE_AA
             )
+            text_above = text_above * -1
 
             # Make projection of palm_link
             if name == 'Mid_MCP':
@@ -322,37 +336,38 @@ class Prog:
                     np.array((circle.x, circle.y))
                 ).astype(np.uint16)
 
-                textsize, _ = cv2.getTextSize('palm_link', font, 0.5, 2)
+                textsize, _ = cv2.getTextSize('palm_link', font, fontsize_keypoints, font_thickness)
                 cv2.putText(
                     self.image,
                     'palm_link',
                     (palm[0] - textsize[0]//2, palm[1] - textsize[1]//2 - 10),
                     font,
-                    0.5,
+                    fontsize_keypoints,
                     (255, 0, 0),
-                    2
+                    font_thickness,
+                    cv2.LINE_AA
                 )
                 cv2.circle(self.image, (palm[0], palm[1]), circle.radius, (255, 0, 0), 10)
 
-        x0 = 50 
-        y0 = 50 
-        if self.keypoint_idx > 21:
-            cv2.rectangle(self.image, (0, 0), (1000, 50+30*(len(self.instructions))+1), (0,0,0), -1)
+        x0 = 25 
+        y0 = 25 
+        if not self.dexmo_ref_active:
+            cv2.rectangle(self.image, (0, 0), (600, 30*len(self.instructions)), (0,0,0), -1)
         else:
-            cv2.rectangle(self.image, (0, 0), (700, 50+30*len(self.instructions)), (0,0,0), -1)
+            cv2.rectangle(self.image, (0, 0), (800, 30*(1+len(self.instructions))), (0,0,0), -1)
 
         for inst in self.instructions:
-            cv2.putText(self.image, inst, (x0, y0), font, 0.7, (255, 255, 255), 2)
-            y0 += 27
+            cv2.putText(self.image, inst, (x0, y0), font, fontsize_inst, (255, 255, 255), font_thickness, cv2.LINE_AA)
+            y0 += 22
 
-        if self.keypoint_idx > 21:
-            cv2.putText(self.image, "Once you are happy with the keypoints, press space to generate a calibration file!", (x0, y0), font, 0.7, (0, 0, 255), 2)
+        if self.dexmo_ref_active:
+            cv2.putText(self.image, "Once you are happy with the keypoints, press space to generate a calibration file!", (x0, y0), font, fontsize_inst, (0, 0, 255), font_thickness, cv2.LINE_AA)
 
         if self.save_path != '':
             if self.saved:
-                cv2.putText(self.image, f"Saved Config to: {self.save_path}", (50, self.image.shape[0] - 100), font, 0.7, (0, 0, 255), 2)
+                cv2.putText(self.image, f"Saved Config to: {self.save_path}", (50, self.image.shape[0] - 100), font, fontsize_inst, (0, 0, 255), font_thickness, cv2.LINE_AA)
             else:
-                cv2.putText(self.image, f"Unsaved changes!", (50, self.image.shape[0] - 100), font, 0.7, (0, 0, 255), 2)
+                cv2.putText(self.image, f"Unsaved changes!", (50, self.image.shape[0] - 100), font, fontsize_inst, (0, 0, 255), font_thickness, cv2.LINE_AA)
 
         cv2.imshow(self.wName, self.image)
 
