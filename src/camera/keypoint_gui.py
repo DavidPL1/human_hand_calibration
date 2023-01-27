@@ -420,6 +420,8 @@ class Prog:
 
         scales['little']   = {k: little[k]/default for k, default in self.defalt_calib['little'].items()}
 
+        scales['palm'] = {k: self.calib_values['palm_link_distances']['little'][k]/self.defalt_calib['palm_link_distances']['little'][k] for k in ['z','x']}
+
         ruj = self.keypoints["DEXMO_REF"]
 
         self.calib_values['thumb']     = thumb

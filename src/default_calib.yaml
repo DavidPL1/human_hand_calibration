@@ -64,3 +64,6 @@ scales:
     middle: 1.
     proximal: 1.
     distal: 1.
+  palm: 
+    x: 1
+    z: 1
