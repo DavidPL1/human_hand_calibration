@@ -16,19 +16,24 @@ def estimate_distance(a, b, simple=False):
     else:
         return __estimateDistance([a, b], camera_matrix, dist_coeff, corners, board_size, corner_size)
 
-def get_axis_offset(mcp, dip, point):
-    p1 = np.array(mcp)
-    p2 = np.array(dip)
-    p3 = np.array(point)
+def get_palm_axis_offset_euclidian(ref, palm, other):
+    p1 = np.array(ref)
+    p2 = np.array(palm)
+    p3 = np.array(other)
 
-    r = __project_point_on_line(p1, p2, p3)
+    r = project_point_on_line(p1, p2, p3)
 
-    x = np.linalg.norm(np.cross(p2-p1, p1-p3))/np.linalg.norm(p2-p1)
-    y = __euclideanDistance(p1, r)
-
-    assert(x == __euclideanDistance(r,p3))
+    try:
+        x = int(p3[0] - r[0])
+        y = int(r[1] -  p2[1])
+    except ValueError:
+        print(f"p1: {p1}, p2: {p2}, r: {r}")
 
     return x, y
+
+# Projects point p onto line ab
+def project_point_on_line(a, b, p):
+    return a + np.dot(p-a, b-a) / np.dot(b-a, b-a) * (b-a)
 
 ### PRIVATE FUNCTIONS ###
 
@@ -99,11 +104,6 @@ def __estimateDistance(points, camera_matrix, distortion_coeff, corners, board_s
 # Returns the euclidean distance of two points
 def __euclideanDistance(p1, p2):
     return math.sqrt( (p1[0]-p2[0])**2+(p1[1]-p2[1])**2 )
-
-# Projects point p onto line ab
-def __project_point_on_line(a, b, p):
-    return a + np.dot(p-a, b-a) / np.dot(b-a, b-a) * (b-a)
-
 
 ### MAIN FUNCTION
 
