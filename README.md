@@ -1,18 +1,25 @@
 # Hand Calibration
 
-## Steps
+## Setup
+We provide scripts for Linux/MacOS (\*.sh) and Windows (\*.bat). Use the ones according to your OS.
 1. Set up camera rig and place chessboard
-2. Install conda environment
+2. Install given conda environment using `conda env create -f environment.yaml`
 3. Calibrate the camera using `scripts/calibrate_camera.sh --device <camera_index> --width <width> --height <height> --corner_length <corner_length>`
    * camera_index: webcam has index 0, additional cameras have indices 1, 2, ...
    * width: width of the calibration chessboard
    * height: height of the calibration chessboard
    * corner_length: distance between squares of chessboard pattern
-4. Remove chessboard
-5. Place hand on top of camera rig
-6. Execute the hand calibration using `scripts/execute.sh --device <camera_index>` 
+
+Every time the camera setup changes you need to perform the calibration again. If the setup persists, you don't need to calibrate again. The calibration is saved in file `calibration.npy`.
+
+## Execute
+1. Place hand on top of camera rig
+2. Execute the hand calibration using `scripts/execute.sh --device <camera_index>` 
    * Follow instructions
    * Presse Q to quit
+
+## Test
+You can also test this tool using script `scripts/show.sh` to view a camera image or script `scripts/test_distance.sh` to test the distance estimation.
 
 ## Dev instructions
 ### Distance Estimation

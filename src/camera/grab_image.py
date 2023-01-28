@@ -4,14 +4,18 @@ import argparse
 
 
 def grab_image(camera_idx, cvt_color=False):
+    print('Wait for camera...')
     camera = cv2.VideoCapture(camera_idx)
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
-    for _ in range(30):
+    for _ in range(15):
         ok, image = camera.read()
 
     if not ok:
         print('Could not grab image')
+        exit(-1)
+    else:
+        print('Image was captured successfully')
     camera.release()
 
     if cvt_color:
