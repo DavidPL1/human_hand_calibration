@@ -14,7 +14,7 @@ Every time the camera setup changes you need to perform the calibration again. I
 
 ## Execute
 1. Place hand on top of camera rig
-2. Execute the hand calibration using `scripts/execute.sh --device <camera_index>` 
+2. Execute the hand calibration using `scripts/execute.sh --device <camera_index> --calibration <path_to_calibration_file>` (alternatively use `--image <image_path>` instead of `--device` to load an image file)
    * Follow instructions
    * Presse Q to quit
 
