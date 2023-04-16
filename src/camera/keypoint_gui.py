@@ -6,6 +6,7 @@ import os
 import argparse
 from grab_image import grab_image
 import copy
+import sys
 
 class Rect:
     x = None
@@ -45,9 +46,10 @@ class Circ:
         return (x - self.x)**2 + (y - self.y)**2 < self.radius**2
 
 class Prog:
-    def __init__(self, image) -> None:
+    def __init__(self, image, cam_calibration) -> None:
         self.source = image
         self.image  = self.source.copy()
+        self.cam_calib = cam_calibration
 
         self.keypoint_names = [
             "palm_ref0",  "palm_ref1",
@@ -188,7 +190,7 @@ class Prog:
                 cv2.line(self.image, (ref.x, ref.y), (circle.x, circle.y), (255, 255, 255), 2)
 
                 if self.show_distances:
-                    text = f"{distance_estimation.estimate_distance((ref.x, ref.y), (circle.x, circle.y))*100:2.2f}cm"
+                    text = f"{distance_estimation.estimate_distance((ref.x, ref.y), (circle.x, circle.y), self.cam_calib)*100:2.2f}cm"
                     textsize, _ = cv2.getTextSize(text, font, fontsize_dists, font_thickness)
                     cv2.putText(
                         self.image,
@@ -208,7 +210,7 @@ class Prog:
             if name != 'Th_MCP' and ('MCP' in name or name == 'Th_TM'):
                 if self.show_distances and self.palm is not None:
                     cv2.line(self.image, (self.palm[0], self.palm[1]), (circle.x, circle.y), (57, 127, 253), 2)
-                    text = f"{distance_estimation.estimate_distance(self.palm, (circle.x, circle.y))*100:2.2f}cm"
+                    text = f"{distance_estimation.estimate_distance(self.palm, (circle.x, circle.y), self.cam_calib)*100:2.2f}cm"
                     textsize, _ = cv2.getTextSize(text, font, fontsize_dists, font_thickness)
                     cv2.putText(
                         self.image,
@@ -227,8 +229,8 @@ class Prog:
                         np.array((keypoint_list[1][1].x, keypoint_list[1][1].y)),
                         np.array((circle.x, circle.y))
                     ).astype(np.int16)
-                    x_off = distance_estimation.estimate_distance(self.palm, proj)
-                    z_off = distance_estimation.estimate_distance((circle.x, circle.y), proj)
+                    x_off = distance_estimation.estimate_distance(self.palm, proj, self.cam_calib)
+                    z_off = distance_estimation.estimate_distance((circle.x, circle.y), proj, self.cam_calib)
                     if proj[1] < self.palm[1]:
                         x_off *= -1
 
@@ -321,9 +323,9 @@ class Prog:
         ip  = self.keypoints["Th_IP"]
         tip = self.keypoints["Th_TIP"]
 
-        thumb["proximal"] = distance_estimation.estimate_distance((tm.x, tm.y), self.palm)
-        thumb["middle"]   = distance_estimation.estimate_distance((ip.x, ip.y), (mcp.x, mcp.y))
-        thumb["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (ip.x, ip.y))
+        thumb["proximal"] = distance_estimation.estimate_distance((tm.x, tm.y), self.palm, self.cam_calib)
+        thumb["middle"]   = distance_estimation.estimate_distance((ip.x, ip.y), (mcp.x, mcp.y), self.cam_calib)
+        thumb["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (ip.x, ip.y), self.cam_calib)
 
         scales['thumb']   = {k: thumb[k]/default for k, default in self.defalt_calib['thumb'].items()}
 
@@ -332,9 +334,9 @@ class Prog:
         dip = self.keypoints["Ind_DIP"]
         tip = self.keypoints["Ind_TIP"]
 
-        index["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y))
-        index["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y))
-        index["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y))
+        index["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y), self.cam_calib)
+        index["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y), self.cam_calib)
+        index["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y), self.cam_calib)
 
         scales['index']   = {k: index[k]/default for k, default in self.defalt_calib['index'].items()}
 
@@ -343,9 +345,9 @@ class Prog:
         dip = self.keypoints["Mid_DIP"]
         tip = self.keypoints["Mid_TIP"]
 
-        middle["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y))
-        middle["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y))
-        middle["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y))
+        middle["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y), self.cam_calib)
+        middle["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y), self.cam_calib)
+        middle["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y), self.cam_calib)
 
         scales['middle']   = {k: middle[k]/default for k, default in self.defalt_calib['middle'].items()}
 
@@ -354,9 +356,9 @@ class Prog:
         dip = self.keypoints["Ring_DIP"]
         tip = self.keypoints["Ring_TIP"]
 
-        ring["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y))
-        ring["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y))
-        ring["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y))
+        ring["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y), self.cam_calib)
+        ring["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y), self.cam_calib)
+        ring["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y), self.cam_calib)
 
         scales['ring']   = {k: ring[k]/default for k, default in self.defalt_calib['ring'].items()}
 
@@ -365,9 +367,9 @@ class Prog:
         dip = self.keypoints["Lit_DIP"]
         tip = self.keypoints["Lit_TIP"]
 
-        little["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y))
-        little["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y))
-        little["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y))
+        little["proximal"] = distance_estimation.estimate_distance((pip.x, pip.y), (mcp.x, mcp.y), self.cam_calib)
+        little["middle"]   = distance_estimation.estimate_distance((dip.x, dip.y), (pip.x, pip.y), self.cam_calib)
+        little["distal"]   = distance_estimation.estimate_distance((tip.x, tip.y), (dip.x, dip.y), self.cam_calib)
 
         scales['little']   = {k: little[k]/default for k, default in self.defalt_calib['little'].items()}
 
@@ -388,17 +390,27 @@ class Prog:
             print(f"Saved calib under path: {self.save_path}")
 
 if __name__ == '__main__':
+    dirname = os.path.dirname(__file__)
+    default_calib = os.path.normpath(os.path.join(dirname, os.pardir, 'calibration.npy'))
+
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
-    parser.add_argument('--test', action='store_true', help='launch with a prerecorded test image')
+    ex_group = parser.add_mutually_exclusive_group()
+    ex_group.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
+    ex_group.add_argument('-i', '--image', help="Path to image to load")
+    parser.add_argument('-c', '--calibration', type=str, help=f"Path to camera calibration (defaults to {default_calib})", default=default_calib)
 
     args = parser.parse_args()
     print(args)
-    if args.test:
-        print('Using image at: ', os.path.join(os.path.dirname(__file__), '..', '..', 'images', 'image_grab.png'))
-        image = cv2.imread(os.path.join(os.path.dirname(__file__), '..', '..', 'images', 'image_grab.png'))
+
+    if not os.path.isfile(args.calibration):
+        print(f'[FATAL ERROR]: calibration file "{args.calibration}" does not exists or is not a file!')
+        sys.exit(-1)
+
+    if args.image:
+        print('Using image at: ', args.image)
+        image = cv2.imread(args.image)
     else:
         image = grab_image(args.device)
 
-    Prog(image)
+    Prog(image, args.calibration)

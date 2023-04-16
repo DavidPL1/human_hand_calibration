@@ -5,12 +5,14 @@ import camera_calibration as camera_calibration
 from functools import partial
 import argparse
 import numpy as np
+import os
+import sys
 
 
 ### PUBLIC FUNCTIONS ###
 
-def estimate_distance(a, b, simple=False):
-    camera_matrix, dist_coeff, corners, board_size, corner_size = camera_calibration.load_camera_params()
+def estimate_distance(a, b, calib_path, simple=False):
+    camera_matrix, dist_coeff, corners, board_size, corner_size = camera_calibration.load_camera_params(calib_path=calib_path)
     if simple:
         return __estimateDistanceSimple([a, b], corners, board_size, corner_size)
     else:
@@ -108,18 +110,32 @@ def __euclideanDistance(p1, p2):
 ### MAIN FUNCTION
 
 if __name__ == "__main__":
+    dirname = os.path.dirname(__file__)
+    default_calib = os.path.normpath(os.path.join(dirname, os.pardir, 'calibration.npy'))
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
+    
+    ex_group = parser.add_mutually_exclusive_group()
+    ex_group.add_argument('-d', '--device', type=int, help="Camera device number (defaults to 0)", default=0)
+    ex_group.add_argument('-i', '--image', help="Path to image to load")
+    parser.add_argument('-c', '--calibration', type=str, help=f"Path to camera calibration (defaults to {default_calib})", default=default_calib)
     args = parser.parse_args()
 
+    if not os.path.isfile(args.calibration):
+        print(f'[FATAL ERROR]: calibration file "{args.calibration}" does not exists or is not a file!')
+        sys.exit(-1)
+
     # Choose points for distance estimation -> mouse event
-    image = camera_calibration.load_distorted_image(args.device, show=False)
+    if args.image:
+        image = cv2.imread(args.image)
+    else:
+        image = camera_calibration.load_distorted_image(args.device, show=False)
 
     points = []
     cv2.imshow("Distance Estimation", image)
     cv2.setMouseCallback("Distance Estimation", partial(__getPointCoordEvent, image, points))
     cv2.waitKey(0)
 
-    print("Simple distance estimation:", estimate_distance(points[0], points[1], simple=True))
-    print("Distance estimation:", estimate_distance(points[0], points[1]))
+    print("Simple distance estimation:", estimate_distance(points[0], points[1], args.calibration, simple=True))
+    print("Distance estimation:", estimate_distance(points[0], points[1], args.calibration))
 

@@ -8,10 +8,8 @@ from grab_image import grab_image
 
 ### PUBLIC FUNCTIONS ###
 
-def load_camera_params():
-    dirname = os.path.dirname(__file__)
-    filename = os.path.join(dirname, '../calibration.npy')
-    with open(filename, 'rb') as f:
+def load_camera_params(calib_path):
+    with open(calib_path, 'rb') as f:
         camera_matrix = np.load(f)
         distortion_coeff = np.load(f)
         corners = np.load(f)
