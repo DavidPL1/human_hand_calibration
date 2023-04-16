@@ -81,6 +81,12 @@ class Prog:
         self.save_path = ''
 
         self.done = False
+        self.instructions = [
+            f"Double-Click LMB to Set the Next Keypoint ({self.keypoint_names[self.keypoint_idx]})",
+            "You Can Drag a Keypoint with RMB to Reposition it",
+            "Press `d` to toggle distance output",
+        ]
+        self.clearCanvasNDraw()
         while not self.done:
             if not self.last_kp_active:
                 self.instructions = [
@@ -93,7 +99,6 @@ class Prog:
                     "You Can Drag a Keypoint with RMB to Reposition it",
                     "Press `d` to toggle distance output"
                 ]
-            self.clearCanvasNDraw()
             key = cv2.waitKey(1) & 0xFF
             if key == ord("d"):
                 print("Pressed d!")
