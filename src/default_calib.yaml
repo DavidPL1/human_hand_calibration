@@ -42,7 +42,6 @@ palm_link_distances:
     x: -0.04175
     y: -0.003
     z: 0.079
-dexmo_ref: 0.06
 scales:
   thumb:
     middle: 1.

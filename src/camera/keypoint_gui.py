@@ -57,13 +57,12 @@ class Prog:
             "Mid_PIP",    "Mid_DIP",    "Mid_TIP",
             "Ring_PIP",   "Ring_DIP",   "Ring_TIP",
             "Lit_PIP", "Lit_DIP", "Lit_TIP",
-            "DEXMO_REF"
         ]
 
         self.keypoints = {}
         self.keypoint_idx = 0
         self.current_circle = None
-        self.dexmo_ref_active = False
+        self.last_kp_active = False
 
         with open(os.path.join(os.path.dirname(__file__), '..', 'default_calib.yaml'), 'r') as f:
             self.calib_values = yaml.safe_load(f)
@@ -83,7 +82,7 @@ class Prog:
 
         self.done = False
         while not self.done:
-            if not self.dexmo_ref_active:
+            if not self.last_kp_active:
                 self.instructions = [
                     f"Double-Click LMB to Set the Next Keypoint ({self.keypoint_names[self.keypoint_idx]})",
                     "You Can Drag a Keypoint with RMB to Reposition it",
@@ -115,13 +114,7 @@ class Prog:
             print(f"Created keypoint for {self.keypoint_names[self.keypoint_idx]} at {x},{y}")
             self.keypoint_idx = min(self.keypoint_idx, len(self.keypoint_names)-1)
             if self.keypoint_idx == len(self.keypoint_names) - 1:
-                self.dexmo_ref_active = True
-            if self.dexmo_ref_active:
-                ref = self.keypoints['Mid_MCP']
-                proj = distance_estimation.project_point_on_line(self.palm, (ref.x, ref.y), (x,y)).astype(np.uint16)
-                self.keypoints[self.keypoint_names[self.keypoint_idx]].x = proj[0]
-                self.keypoints[self.keypoint_names[self.keypoint_idx]].y = proj[1]
-                print(f"Repositioned DEXMO keypoint as projection at {proj}")
+                self.last_kp_active = True
             else:
                 self.keypoint_idx += 1
 
@@ -150,22 +143,6 @@ class Prog:
 
         self.dragging.x = x
         self.dragging.y = y
-        if self.dexmo_ref_active:
-            if self.dragging == self.keypoints['DEXMO_REF']:
-                ref = self.keypoints['Mid_MCP']
-                proj = distance_estimation.project_point_on_line(self.palm, (ref.x, ref.y), (x,y)).astype(np.uint16)
-                self.dragging.x = proj[0]
-                self.dragging.y = proj[1]
-        # Precision rooted recursion error! Need to adjust position after dragging MCP or palm_refs
-            # elif self.dragging == self.keypoints['palm_ref0'] or self.dragging == self.keypoints['palm_ref1']:
-            #     mcp = self.keypoints['Mid_MCP']
-            #     ref = self.keypoints['DEXMO_REF']
-            #     proj = distance_estimation.project_point_on_line(self.palm, (mcp.x, mcp.y), (ref.x, ref.y)).astype(np.uint16)
-            #     ref.x, ref.y = proj
-            # elif self.dragging == self.keypoints['Mid_MCP']:
-            #     ref = self.keypoints['DEXMO_REF']
-            #     proj = distance_estimation.project_point_on_line(self.palm, (self.dragging.x, self.dragging.y), (ref.x, ref.y)).astype(np.uint16)
-            #     ref.x, ref.y = proj
 
     def clearCanvasNDraw(self):
         self.image  = self.source.copy()
@@ -194,7 +171,7 @@ class Prog:
                     ref = MCPs[0]
                 elif name == 'Ind_PIP':
                     ref = MCPs[1]
-                elif name == 'Mid_PIP' or name == 'DEXMO_REF':
+                elif name == 'Mid_PIP':
                     ref = MCPs[2]
                 elif name == 'Ring_PIP':
                     ref = MCPs[3]
@@ -254,50 +231,6 @@ class Prog:
                     self.calib_values['palm_link_distances'][c_name]['z'] = z_off
                     self.calib_values['palm_link_distances'][c_name]['x'] = x_off
 
-                # Debugging for triangle distances
-                # if name == 'Lit_MCP' or name == 'Ind_MCP' and self.palm is not None:
-                #     p1 = (keypoint_list[0][1].x, keypoint_list[0][1].y)
-                #     p2 = self.palm
-                #     p3 = (circle.x, circle.y)
-                #     x_dist, y_dist = distance_estimation.get_palm_axis_offset_euclidian(p1, p2, p3)
-
-                #     proj = distance_estimation.project_point_on_line(
-                #         np.array((keypoint_list[0][1].x, keypoint_list[0][1].y)),
-                #         np.array((keypoint_list[1][1].x, keypoint_list[1][1].y)),
-                #         np.array((circle.x, circle.y))
-                #     ).astype(np.int16)
-                #     cv2.circle(self.image, (proj[0], proj[1]), circle.radius//2, (255, 0, 0), 2)
-
-                #     cv2.line(self.image, self.palm, proj, (255, 255, 255), 2)
-                #     cv2.circle(self.image, proj, circle.radius//2, (255, 255, 255), 2)
-                #     text = f"{distance_estimation.estimate_distance(self.palm, proj)*100:2.2f}cm"
-                #     textsize, _ = cv2.getTextSize(text, font, fontsize_dists, font_thickness)
-                #     cv2.putText(
-                #         self.image,
-                #         text,
-                #         (proj[0] - textsize[0], proj[1] - textsize[1]//2),
-                #         font, 
-                #         fontsize_dists, 
-                #         (255, 255, 255),
-                #         font_thickness,
-                #         cv2.LINE_AA
-                #     )
-
-                #     cv2.line(self.image, (circle.x, circle.y), proj, (255, 255, 255), 2)
-                #     text = f"{distance_estimation.estimate_distance((circle.x, circle.y), proj)*100:2.2f}cm"
-                #     textsize, _ = cv2.getTextSize(text, font, fontsize_dists, font_thickness)
-                #     cv2.putText(
-                #         self.image,
-                #         text,
-                #         (circle.x - (circle.x - proj[0])//2 - textsize[0]//2, proj[1] - textsize[1]),
-                #         font, 
-                #         fontsize_dists, 
-                #         (255, 255, 255),
-                #         font_thickness,
-                #         cv2.LINE_AA
-                #     )
-
-
 
                 if len(MCPs) > 0:
                     cv2.line(self.image, (MCPs[-1].x, MCPs[-1].y), (circle.x, circle.y), (0, 255, 0), 2)
@@ -307,12 +240,8 @@ class Prog:
 
         for idx,(name,circle) in enumerate(self.keypoints.items()):
             # Make circle and name as last, to be on top of lines
-            if name == "DEXMO_REF":
-                color = (255, 255, 255)
-                cv2.circle(self.image, (circle.x, circle.y), circle.radius, color, 3)
-            else:
-                color = (255, 0, 0)
-                cv2.circle(self.image, (circle.x, circle.y), circle.radius, (0,  255, 0), 3)
+            color = (255, 0, 0)
+            cv2.circle(self.image, (circle.x, circle.y), circle.radius, (0,  255, 0), 3)
             textsize, _ = cv2.getTextSize(name, font, fontsize_keypoints, font_thickness)
             if 'MCP' in name or 'PIP' in name:
                 text_above = 1
@@ -351,7 +280,7 @@ class Prog:
 
         x0 = 25 
         y0 = 25 
-        if not self.dexmo_ref_active:
+        if not self.last_kp_active:
             cv2.rectangle(self.image, (0, 0), (600, 30*len(self.instructions)), (0,0,0), -1)
         else:
             cv2.rectangle(self.image, (0, 0), (800, 30*(1+len(self.instructions))), (0,0,0), -1)
@@ -360,7 +289,7 @@ class Prog:
             cv2.putText(self.image, inst, (x0, y0), font, fontsize_inst, (255, 255, 255), font_thickness, cv2.LINE_AA)
             y0 += 22
 
-        if self.dexmo_ref_active:
+        if self.last_kp_active:
             cv2.putText(self.image, "Once you are happy with the keypoints, press space to generate a calibration file!", (x0, y0), font, fontsize_inst, (0, 0, 255), font_thickness, cv2.LINE_AA)
 
         if self.save_path != '':
@@ -439,14 +368,12 @@ class Prog:
 
         scales['palm'] = {k: self.calib_values['palm_link_distances']['little'][k]/self.defalt_calib['palm_link_distances']['little'][k] for k in ['z','x']}
 
-        ruj = self.keypoints["DEXMO_REF"]
 
         self.calib_values['thumb']     = thumb
         self.calib_values['index']     = index 
         self.calib_values['middle']    = middle 
         self.calib_values['ring']      = ring 
         self.calib_values['little']    = little
-        self.calib_values['dexmo_ref'] = distance_estimation.estimate_distance((middle_mcp.x, middle_mcp.y), (ruj.x, ruj.y))
         self.calib_values['scales']    = scales
 
         with open('handcalib.yaml', 'w') as f:
