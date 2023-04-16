@@ -40,12 +40,37 @@ def project_point_on_line(a, b, p):
 ### PRIVATE FUNCTIONS ###
 
 # imshow mouse event
-def __getPointCoordEvent( image, event_points, event,x,y,flags,param):
-    if event == cv2.EVENT_FLAG_LBUTTON:
+def __getPointCoordEvent(image, event_points, calib, event,x,y,flags,param):
+    if event == cv2.EVENT_LBUTTONDBLCLK:
         if(len(event_points) < 2):
-            event_points.append([x,y])
-            cv2.circle(image, (x,y), 3, (0, 0, 255), thickness=3)
-            cv2.imshow("Distance Estimation", image)     
+            event_points.append((x, y))
+        
+        for circ in points:
+            cv2.circle(image, circ, 3, (0, 0, 255), thickness=3)
+
+        if len(event_points) == 2:
+            simple_dist = estimate_distance(event_points[0], event_points[1], calib, simple=True)
+            print("Simple distance estimation:", simple_dist)
+            dist = estimate_distance(event_points[0], event_points[1], calib)
+            print("Distance estimation:", dist)
+
+            cv2.line(image, event_points[0], event_points[1], (57, 127, 253), 2)
+            text = f"{dist*100:2.2f}cm"
+            textsize, _ = cv2.getTextSize(text, cv2.FONT_HERSHEY_COMPLEX_SMALL, 1.5, 1)
+            cv2.putText(
+                image,
+                text,
+                (event_points[0][0] - (event_points[0][0] - event_points[1][0])//2 - textsize[0]//2, event_points[0][1] - (event_points[0][1] - event_points[1][1])//2 - textsize[1]//2),
+                cv2.FONT_HERSHEY_COMPLEX_SMALL, 
+                1.5,
+                (0, 0, 255),
+                1,
+                cv2.LINE_AA
+            )
+
+            event_points.clear()
+
+        cv2.imshow("Distance Estimation", image)     
 
 # Project image point to world point
 def __pointToWorld(image_point, camera_matrix, rotation_matrix, translation_vector):
@@ -133,9 +158,13 @@ if __name__ == "__main__":
 
     points = []
     cv2.imshow("Distance Estimation", image)
-    cv2.setMouseCallback("Distance Estimation", partial(__getPointCoordEvent, image, points))
-    cv2.waitKey(0)
+    print("Double click the left mouse button to set a starting and an ending point for the measured distance. Press Q to exit")
+    cv2.setMouseCallback("Distance Estimation", partial(__getPointCoordEvent, image, points, args.calibration))
+    
+    run = True
 
-    print("Simple distance estimation:", estimate_distance(points[0], points[1], args.calibration, simple=True))
-    print("Distance estimation:", estimate_distance(points[0], points[1], args.calibration))
-
+    while run:
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
+            print("Pressed Q to quit!")
+            run = False
